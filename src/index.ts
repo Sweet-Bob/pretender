@@ -219,8 +219,11 @@ function interceptor(ctx) {
 }
 
 function verbify(verb) {
-  return function(path, handler, async) {
-    return this.register(verb, path, handler, async);
+  return function(path, handler, async, isPassthroughFn) {
+    if (isPassthroughFn) {
+        this.isPassthroughFn = isPassthroughFn;
+    }
+    return this.register(verb, path, handler, async, isPassthroughFn);
   };
 }
 
@@ -278,7 +281,7 @@ Pretender.prototype = {
     var recognized = this.hosts.forURL(request.url)[verb].recognize(path);
     var match = recognized && recognized[0];
 
-    if ((match && match.handler === PASSTHROUGH) || this.forcePassthrough)  {
+    if ((match && match.handler === PASSTHROUGH) || this.forcePassthrough || this.isPassthroughFn(request))  {
       this.passthroughRequests.push(request);
       this.passthroughRequest(verb, path, request);
       return true;
